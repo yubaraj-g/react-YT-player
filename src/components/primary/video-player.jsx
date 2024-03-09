@@ -1,6 +1,14 @@
 /** library imports */
 import React, { useEffect, useRef, useState } from "react";
-import { Pause, Play, Gauge, Volume2, VolumeX, Loader } from "lucide-react";
+import {
+  Pause,
+  Play,
+  Gauge,
+  Volume2,
+  VolumeX,
+  Loader,
+  Maximize,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** UI components */
@@ -13,7 +21,6 @@ import {
 } from "@/components/ui/popover";
 
 /** hooks and other imports */
-import apiCallRapid from "@/lib/api-call-rapid";
 import { useVideoData } from "@/contexts";
 
 const VideoPlayer = () => {
@@ -25,6 +32,7 @@ const VideoPlayer = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [volume, setVolume] = useState(0);
 
   const videoElem = useRef();
 
@@ -32,9 +40,10 @@ const VideoPlayer = () => {
     setIsHidden(false);
     setIsPlaying(!isPlaying);
     // console.log(videoElem.current.__proto__);
-    if (videoElem.current.paused || videoElem.current.ended)
+    if (videoElem.current.paused || videoElem.current.ended) {
       videoElem.current.play();
-    else videoElem.current.pause();
+      setVolume(50);
+    } else videoElem.current.pause();
 
     setIsMuted(false);
   };
@@ -70,6 +79,24 @@ const VideoPlayer = () => {
       setDescription(currentVideo.description);
     }
   }, [currentVideo]);
+
+  /** volume seeker */
+  useEffect(() => {
+    if (videoElem && videoElem.current) {
+      videoElem.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  /** fullscreen feature */
+  const fullScreenFunction = () => {
+    if (videoElem.current.requestFullscreen) {
+      videoElem.current.requestFullscreen();
+    } else if (videoElem.current.mozRequestFullScreen) {
+      videoElem.current.mozRequestFullScreen();
+    } else if (videoElem.current.webkitRequestFullScreen) {
+      videoElem.current.webkitRequestFullScreen();
+    }
+  };
 
   return (
     <React.Fragment>
@@ -165,14 +192,32 @@ const VideoPlayer = () => {
                 onClick={() => {
                   setIsMuted(!isMuted);
                   videoElem.current.play();
+                  setVolume(50);
                 }}
               >
-                {isMuted ? (
+                {isMuted || volume === 0 ? (
                   <VolumeX size={16} color="white" />
                 ) : (
                   <Volume2 size={16} color="white" />
                 )}
               </Button>
+              <div className="w-24 bg-white/20 rounded flex items-center justify-center">
+                <Slider
+                  defaultValue={[0]}
+                  max={100}
+                  step={1}
+                  value={[volume]}
+                  onValueChange={(value) => {
+                    // console.log(value);
+                    if (value === 0) {
+                      setIsMuted(true);
+                    } else {
+                      setIsMuted(false);
+                    }
+                    setVolume(...value);
+                  }}
+                />
+              </div>
               <Popover>
                 <PopoverTrigger
                   variant="ghost"
@@ -219,6 +264,14 @@ const VideoPlayer = () => {
                   </Button>
                 </PopoverContent>
               </Popover>
+
+              <Button
+                variant="ghost"
+                className="hover:bg-opacity-5 hover:bg-white px-2 py-1.5 h-fit shadow-md rounded"
+                onClick={fullScreenFunction}
+              >
+                <Maximize size={16} color="white" />
+              </Button>
             </div>
           )}
         </div>
