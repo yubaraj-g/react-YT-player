@@ -1,31 +1,61 @@
 /** library imports */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { GripVertical } from "lucide-react";
 
 /** hooks and other imports */
 import apiCallRapid from "@/lib/api-call-rapid";
 import useCallApi from "@/hooks/useCallApi";
 import { useVideoData } from "@/contexts";
-import { GripVertical } from "lucide-react";
 
 const PlayList = () => {
   const { loading, data, error } = useCallApi();
 
   // console.log(loading, data, error);
 
-  const { setCurrentVideoId, setCurrentVideo } = useVideoData();
+  const {
+    setCurrentVideoId,
+    currentVideoId,
+    setCurrentVideo,
+    currentVideo,
+    setAllYTVideos,
+  } = useVideoData();
 
-  //   const [active, setActive] = useState(false);
+  const [videos, setVideos] = useState([]);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setVideos(data);
+    }
+  }, [data]);
+
   const setVideo = (videoId) => {
-    setCurrentVideoId(videoId);
-    apiCallRapid(videoId).then((res) => {
-      if (res.status === "OK") {
-        // success
-        setCurrentVideo(res);
-      } else {
-        // error
-        setCurrentVideo(null);
-      }
-    });
+    if (videoId !== currentVideo) {
+      setCurrentVideoId(videoId);
+
+      apiCallRapid(videoId).then((res) => {
+        if (res.status === "OK") {
+          // success
+          setCurrentVideo(res);
+        } else {
+          // error
+          setCurrentVideo(null);
+        }
+      });
+    }
+  };
+
+  const dragDiv = useRef(0);
+  const draggedOverDiv = useRef(0);
+
+  const handleSort = () => {
+    const dataClone = [...data];
+    const temp = dataClone[dragDiv.current];
+    dataClone[dragDiv.current] = dataClone[draggedOverDiv.current];
+    dataClone[draggedOverDiv.current] = temp;
+    console.log(dataClone);
+    setAllYTVideos(dataClone);
+    setVideos(dataClone);
   };
 
   return (
@@ -44,19 +74,26 @@ const PlayList = () => {
             <h1 className="text-xl font-bold text-white w-full text-center mb-2">
               Playlist
             </h1>
-            <div
-              className="flex flex-col gap-3 w-full h-full overflow-y-scroll overflow-x-hidden px-4 min-h-96"
-              id="playlist-scroll"
-            >
-              {data.map((item) => (
+            <div className="flex flex-col gap-3 w-full h-full overflow-y-scroll overflow-x-hidden px-4 min-h-96">
+              {videos.map((item, index) => (
                 <div
                   key={item.id.videoId}
-                  className="h-24 border border-primary/15 flex gap-3 items-center text-white font-semibold bg-primary/20 rounded-lg hover:bg-primary/30 hover:cursor-pointer p-2 hover:scale-[1.02] transition-all"
+                  className={cn(
+                    "h-24 border border-primary/15 flex gap-3 items-center text-white font-semibold rounded-lg hover:bg-primary/40 hover:cursor-pointer p-2 hover:scale-[1.02] transition-all",
+                    item.id.videoId === currentVideoId
+                      ? "bg-primary/40"
+                      : "bg-primary/20 "
+                  )}
                   id={item.id.videoId}
                   onClick={() => {
                     // console.log(item.id.videoId);
                     setVideo(item.id.videoId);
                   }}
+                  draggable
+                  onDragStart={() => (dragDiv.current = index)}
+                  onDragEnter={() => (draggedOverDiv.current = index)}
+                  onDragEnd={handleSort}
+                  onDragOver={(e) => e.preventDefault()}
                 >
                   <div className="max-w-[16px] text-muted-foreground">
                     <GripVertical size={24} />

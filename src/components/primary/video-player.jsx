@@ -101,7 +101,7 @@ const VideoPlayer = () => {
               src={link}
             />
           ) : null}
-          {isHidden === false ? (
+          {isHidden === false && !loading ? (
             <Button
               onClick={playFunc}
               onMouseOver={showFunc}
@@ -110,7 +110,7 @@ const VideoPlayer = () => {
               {!isPlaying ? <Play size={16} /> : <Pause size={16} />}
             </Button>
           ) : null}
-          {!isHidden && (
+          {!isHidden && !loading && (
             <div
               className="flex gap-1 items-center absolute left-0 bottom-0 w-full bg-gradient-to-t from-black to-transparent"
               onMouseOver={showFunc}
