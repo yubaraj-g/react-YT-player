@@ -1,9 +1,9 @@
 const apiCallRapid = async (id) => {
-  const testId = "UxxajLWwzqY";
+  // const testId = "UxxajLWwzqY";
   const rapidHost = import.meta.env.VITE_RAPID_HOST;
   const rapidKey = import.meta.env.VITE_RAPID_KEY;
 
-  const url = `https://${rapidHost}/dl?id=${testId}`;
+  const url = `https://${rapidHost}/dl?id=${id}`;
   const options = {
     method: "GET",
     headers: new Headers({
@@ -15,7 +15,7 @@ const apiCallRapid = async (id) => {
   try {
     const res = await fetch(url, options);
     const json = await res.json();
-    console.log(json);
+    // console.log(json);
     return json;
   } catch (err) {
     console.log(err);
